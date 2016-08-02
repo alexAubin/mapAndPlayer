@@ -3,48 +3,82 @@ import pygame
 from pygame.locals import *
 
 ###############################################################################
+bg = "assets/bg.png"
 
 tileDict = {
-    "#" : "assets/wall.png",
+    "-" : "assets/wall-width.png",
+    "|" : "assets/wall-height.png",
+    "T" : "assets/wall-all.png",
+    "'" : "assets/wall-top.png",
+    "F" : "assets/wall-righttopbot.png",
+    "7" : "assets/wall-lefttopbot.png",
+    "L" : "assets/wall-righttop.png",
+    "/" : "assets/wall-lefttop.png",
+
     "." : "assets/empty.png"
 }
 
 class Map() :
 
+    # méthode exécutée à l'appel de la classe Map
+    # avec un nom de fichier en argument
     def __init__(self, fileName) :
-
+        # exécute la méthode loadMap() avec le nom du fichier en argument
         self.loadMap(fileName)
+        # exécute aussi la méthode loadTiles()
         self.loadTiles()
 
+    # méthode stockant les chaînes de caractère venant du fichier de la map
+    # dans une liste 'map'
     def loadMap(self, fileName) :
-
+        # définition de la liste 'map'
         self.map = []
 
+        # ouvre le fichier en mode 'read only' et lui assigne la variable 'f'
         with open(fileName, "r") as f :
+            # on appelle 'line' chaque ligne de texte extraite du fichier avec
+            # la fonction readlines()
             for line in f.readlines() :
+                # on ajoute à la liste 'map' ces lignes les unes après les
+                # autres en enlevant le caractère de retour à la ligne
                 self.map.append(line.rstrip())
 
+    # méthode chargeant les images des tiles dans un dictionnaire
     def loadTiles(self) :
 
+        # définition du dictionnaire 'tiles'
         self.tiles = { }
 
+        # on parcourt le dictionnaire 'tileDict' et on nomme tileSymbol chaque
+        # élément du dictionnaire en ayant la possibilité de faire quelque chose avec
+        # à chaque fois
         for tileSymbol in tileDict :
-
+            # on récupère le chemin vers l'image stocké dans le dictionnaire
+            # 'tileDict' et on le stocke dans la variable 'tilePath'
             tilePath = tileDict[tileSymbol]
-            self.tiles[tileSymbol] = pygame.image.load(tilePath)
+            # on ajoute à 'tiles' le chemin vers chaque image
+            self.tiles[tileSymbol] = pygame.image.load(tilePath).convert_alpha()
 
+    # méthode pour faire le rendu de la carte
     def render(self) :
 
         for y, line in enumerate(self.map) :
             for x, char in enumerate(line) :
-                screen.blit(self.tiles[char], (x * tileSize, y * tileSize))
+                ecran.blit(self.tiles[char], (x * tailleTile, y * tailleTile))
 
-    def isWall(self, x, y) :
+    # méthode pour déterminer si le prochain tile est traversable
+    # on donne la position du dit tile en argument (x, y)
+    def isWalkable(self, x, y) :
+        # on regarde, dans la liste 'map', si le prochain tile sera un '.'
+        if self.map[y][x] == "." :
+            # si oui on renvoit le résultat 'true'
+            return True
+        else :
+            return False
 
-        return (self.map[y][x] == "#")
-    
 ###############################################################################
 
+#définition d'un dictionnaire contenant les chemins vers les sprites du perso
 spritesDict = {
     "up"    : "assets/hero_up.png",
     "down"  : "assets/hero_down.png",
@@ -52,12 +86,18 @@ spritesDict = {
     "right" : "assets/hero_right.png"
 }
 
-class Hero() :
 
+class Perso() :
+
+    # méthode s'exécutant à l'initialisation de la classe Perso
+    # en donnant en paramètre la position du perso
     def __init__(self, initialPosition) :
 
         self.loadSprites()
-        self.currentDirection = "down" 
+        # déclare une variable de direction en lui indiquant une valeur par
+        # défaut
+        self.currentDirection = "down"
+        # XXX
         (self.x, self.y) = initialPosition
 
     def loadSprites(self) :
@@ -75,17 +115,17 @@ class Hero() :
 
     def move(self, dx, dy) :
 
-        nextTileIsAWall = theMap.isWall(self.x + dx, self.y + dy)
+        nextTileIsWalkable = laMap.isWalkable(self.x + dx, self.y + dy)
 
-        if not (nextTileIsAWall) :
+        if (nextTileIsWalkable) :
             self.x += dx
             self.y += dy
 
     def render(self) :
 
         currentSprite = self.sprites[self.currentDirection]
-        
-        screen.blit(currentSprite, (self.x * tileSize, self.y * tileSize))
+
+        ecran.blit(currentSprite, (self.x * tailleTile, (self.y - 0.5) * tailleTile))
 
 ###############################################################################
 
@@ -104,64 +144,59 @@ def eventHandler() :
 def keysHandler(key) :
 
     if key == pygame.K_LEFT :
-        theHero.look("left")
-        theHero.move(-1, 0)
+        lePerso.look("left")
+        lePerso.move(-1, 0)
     if key == pygame.K_RIGHT :
-        theHero.look("right")
-        theHero.move(1, 0)
+        lePerso.look("right")
+        lePerso.move(1, 0)
     if key == pygame.K_UP :
-        theHero.look("up")
-        theHero.move(0, -1)
+        lePerso.look("up")
+        lePerso.move(0, -1)
     if key == pygame.K_DOWN :
-        theHero.look("down")
-        theHero.move(0, 1)
+        lePerso.look("down")
+        lePerso.move(0, 1)
 
 ###############################################################################
 
-# Initialize PyGame
+# Initialise PyGame
 pygame.init()
 
-# Set up FPS clock
+# Défini le nombre de FPS (Frames Per Second)
 fps = 30
 fpsClock = pygame.time.Clock()
 
-# Map width (in tile units)
-tileSize = 32
-width  = 10
-height = 10
+# Défini la taille d'un tile en px
+tailleTile = 64
+# Défini la taille de la map en tiles
+largeur = 20
+hauteur = 10
 
-# Setup the screen
-windowLabel = "My Game"
-screen = pygame.display.set_mode((width * tileSize, height * tileSize), 0, 32)
-pygame.display.set_caption(windowLabel)
-screen.fill( (0,0,0) )
+# Setup the ecran
+titreFenetre = "My Game"
+ecran = pygame.display.set_mode((largeur * tailleTile, hauteur * tailleTile))
+pygame.display.set_caption(titreFenetre)
 
 # Init/load the map
-theMap = Map("map.asc")
+laMap = Map("mapComplexe.asc")
 
 # Init/load hero
-theHero = Hero((1,1))
-
-theHero.move(0,1)
+lePerso = Perso((1,1))
 
 # Main loop
 while (True) :
 
     # Effacer l'ecran
-    screen.fill((10, 10, 10))
+    ecran.fill((10, 10, 10))
 
     # Gerer les events
     eventHandler()
 
     # Afficher la map puis le hero
-    theMap.render()
-    theHero.render()
+    laMap.render()
+    lePerso.render()
 
-    # Update screen
+    # Update ecran
     pygame.display.update()
     fpsClock.tick(fps)
 
 ###############################################################################
-
-
-
