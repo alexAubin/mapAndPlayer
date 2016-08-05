@@ -20,18 +20,18 @@ tileDict = {
 
 class Map() :
 
-    # méthode exécutée à l'appel de la classe Map
+    # methode executee a l'appel de la classe Map
     # avec un nom de fichier en argument
     def __init__(self, fileName) :
-        # exécute la méthode loadMap() avec le nom du fichier en argument
+        # execute la methode loadMap() avec le nom du fichier en argument
         self.loadMap(fileName)
-        # exécute aussi la méthode loadTiles()
+        # execute aussi la methode loadTiles()
         self.loadTiles()
 
-    # méthode stockant les chaînes de caractère venant du fichier de la map
+    # methode stockant les chaines de caractere venant du fichier de la map
     # dans une liste 'map'
     def loadMap(self, fileName) :
-        # définition de la liste 'map'
+        # definition de la liste 'map'
         self.map = []
 
         # ouvre le fichier en mode 'read only' et lui assigne la variable 'f'
@@ -39,46 +39,53 @@ class Map() :
             # on appelle 'line' chaque ligne de texte extraite du fichier avec
             # la fonction readlines()
             for line in f.readlines() :
-                # on ajoute à la liste 'map' ces lignes les unes après les
-                # autres en enlevant le caractère de retour à la ligne
+                # on ajoute a la liste 'map' ces lignes les unes apres les
+                # autres en enlevant le caractere de retour a la ligne
                 self.map.append(line.rstrip())
 
-    # méthode chargeant les images des tiles dans un dictionnaire
+    # methode chargeant les images des tiles dans un dictionnaire
     def loadTiles(self) :
 
-        # définition du dictionnaire 'tiles'
+        # definition du dictionnaire 'tiles'
         self.tiles = { }
 
         # on parcourt le dictionnaire 'tileDict' et on nomme tileSymbol chaque
-        # élément du dictionnaire en ayant la possibilité de faire quelque chose avec
-        # à chaque fois
+        # element du dictionnaire en ayant la possibilite de faire quelque chose avec
+        # a chaque fois
         for tileSymbol in tileDict :
-            # on récupère le chemin vers l'image stocké dans le dictionnaire
+            # on recupere le chemin vers l'image stocke dans le dictionnaire
             # 'tileDict' et on le stocke dans la variable 'tilePath'
             tilePath = tileDict[tileSymbol]
-            # on ajoute à 'tiles' le chemin vers chaque image
+            # on ajoute a 'tiles' le chemin vers chaque image
             self.tiles[tileSymbol] = pygame.image.load(tilePath).convert_alpha()
 
-    # méthode pour faire le rendu de la carte
+    # methode pour faire le rendu de la carte
     def render(self) :
 
-        for y, line in enumerate(self.map) :
-            for x, char in enumerate(line) :
-                ecran.blit(self.tiles[char], (x * tailleTile, y * tailleTile))
+        # Parcourir toutes les coordonnees x,y de la map
+        for x in range(largeur) :
+            for y in range(hauteur) :
 
-    # méthode pour déterminer si le prochain tile est traversable
+                # Recuperer le caractere associe a cette coordonnee x,y
+                caractere = self.map[y][x]
+                # Recuper l'image associe a ce caractere
+                tileImage = self.tiles[caractere]
+                # Afficher l'image sur l'ecran
+                ecran.blit(tileImage, (x * tailleTile, y * tailleTile))
+
+    # methode pour determiner si le prochain tile est traversable
     # on donne la position du dit tile en argument (x, y)
     def isWalkable(self, x, y) :
         # on regarde, dans la liste 'map', si le prochain tile sera un '.'
         if self.map[y][x] == "." :
-            # si oui on renvoit le résultat 'true'
+            # si oui on renvoit le resultat 'true'
             return True
         else :
             return False
 
 ###############################################################################
 
-#définition d'un dictionnaire contenant les chemins vers les sprites du perso
+#definition d'un dictionnaire contenant les chemins vers les sprites du perso
 spritesDict = {
     "up"    : "assets/hero_up.png",
     "down"  : "assets/hero_down.png",
@@ -89,13 +96,13 @@ spritesDict = {
 
 class Perso() :
 
-    # méthode s'exécutant à l'initialisation de la classe Perso
-    # en donnant en paramètre la position du perso
+    # methode s'executant a l'initialisation de la classe Perso
+    # en donnant en parametre la position du perso
     def __init__(self, initialPosition) :
 
         self.loadSprites()
-        # déclare une variable de direction en lui indiquant une valeur par
-        # défaut
+        # declare une variable de direction en lui indiquant une valeur par
+        # defaut
         self.currentDirection = "down"
         # XXX
         (self.x, self.y) = initialPosition
@@ -161,13 +168,13 @@ def keysHandler(key) :
 # Initialise PyGame
 pygame.init()
 
-# Défini le nombre de FPS (Frames Per Second)
+# Defini le nombre de FPS (Frames Per Second)
 fps = 30
 fpsClock = pygame.time.Clock()
 
-# Défini la taille d'un tile en px
+# Defini la taille d'un tile en px
 tailleTile = 64
-# Défini la taille de la map en tiles
+# Defini la taille de la map en tiles
 largeur = 20
 hauteur = 10
 
