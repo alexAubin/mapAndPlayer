@@ -31,17 +31,12 @@ class Map() :
     # methode stockant les chaines de caractere venant du fichier de la map
     # dans une liste 'map'
     def loadMap(self, fileName) :
-        # definition de la liste 'map'
-        self.map = []
 
         # ouvre le fichier en mode 'read only' et lui assigne la variable 'f'
         with open(fileName, "r") as f :
-            # on appelle 'line' chaque ligne de texte extraite du fichier avec
-            # la fonction readlines()
-            for line in f.readlines() :
-                # on ajoute a la liste 'map' ces lignes les unes apres les
-                # autres en enlevant le caractere de retour a la ligne
-                self.map.append(line.rstrip())
+
+            # Sauvegarder le contenu du fichier dans self.map
+            self.map = f.readlines()
 
     # methode chargeant les images des tiles dans un dictionnaire
     def loadTiles(self) :
