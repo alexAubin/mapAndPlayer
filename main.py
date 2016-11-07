@@ -3,147 +3,224 @@ import pygame
 from pygame.locals import *
 
 ###############################################################################
-bg = "assets/bg.png"
+tile_dict = {
+    "─": "assets/wall-width.png",
+    "│": "assets/wall-height.png",
+    "┬": "assets/wall-all.png",
+    "╵": "assets/wall-top.png",
+    "┌": "assets/wall-righttopbot.png",
+    "┐": "assets/wall-lefttopbot.png",
+    "└": "assets/wall-righttop.png",
+    "┘": "assets/wall-lefttop.png",
 
-tileDict = {
-    "-" : "assets/wall-width.png",
-    "|" : "assets/wall-height.png",
-    "T" : "assets/wall-all.png",
-    "'" : "assets/wall-top.png",
-    "F" : "assets/wall-righttopbot.png",
-    "7" : "assets/wall-lefttopbot.png",
-    "L" : "assets/wall-righttop.png",
-    "/" : "assets/wall-lefttop.png",
+    ".": "assets/empty.png",
+    "■": "assets/bloc.png",
+    "□": "assets/interrupteur.png",
+    "▣": "assets/blocActive.png"
 
-    "." : "assets/empty.png"
 }
 
 class Map() :
+    """ Classe recueillant toutes les méthodes relatives à la gestion de la map """
 
-    # methode executee a l'appel de la classe Map
-    # avec un nom de fichier en argument
-    def __init__(self, fileName) :
-        # execute la methode loadMap() avec le nom du fichier en argument
-        self.loadMap(fileName)
-        # execute aussi la methode loadTiles()
-        self.loadTiles()
+    # Méthode exécutée à l'appel de la classe Map
+    def __init__(self, fileName):
+        """ Exécute les méthodes chargeant la map et les images en mémoire """
 
-    # methode stockant les chaines de caractere venant du fichier de la map
-    # dans une liste 'map'
-    def loadMap(self, fileName) :
+        self.load_map(fileName)
+        self.load_tiles()
 
-        # ouvre le fichier en mode 'read only' et lui assigne la variable 'f'
-        with open(fileName, "r") as f :
+    def load_map(self, fileName):
+        """ Transforme le fichier de la map en une liste à 2 niveaux que
+        l'on pourra modifier. Cette liste servira à l'affichage de la map.
+        """
 
-            # Sauvegarder le contenu du fichier dans self.map
-            self.map = f.readlines()
+        # Défini une liste vide dans laquelle nous allons stocker les lignes
+        self.map = []
 
-    # methode chargeant les images des tiles dans un dictionnaire
-    def loadTiles(self) :
+        # Ouvre le fichier en mode 'read only' et lui assigne la variable 'f'
+        with open(fileName, "r") as f:
+            # Pour chaque ligne ('L') du fichier, on transforme son contenu en
+            # une liste de caractères et on l'ajoute à la liste 'map'
+            for L in f:
+                # On se débarasse aussi du caractère de passage à la ligne '\n'
+                self.map.append(list(L.strip("\n")))
 
-        # definition du dictionnaire 'tiles'
+    def load_tiles(self):
+        """ Charge les images des tiles dans un dictionnaire """
+
+        # Défini un dictionnaire 'tiles' vide
         self.tiles = { }
 
-        # on parcourt le dictionnaire 'tileDict' et on nomme tileSymbol chaque
-        # element du dictionnaire en ayant la possibilite de faire quelque chose avec
-        # a chaque fois
-        for tileSymbol in tileDict :
-            # on recupere le chemin vers l'image stocke dans le dictionnaire
-            # 'tileDict' et on le stocke dans la variable 'tilePath'
-            tilePath = tileDict[tileSymbol]
-            # on ajoute a 'tiles' le chemin vers chaque image
-            self.tiles[tileSymbol] = pygame.image.load(tilePath).convert_alpha()
+        # Parcourt le dictionnaire 'tile_dict' et on nomme 'tile_symbol' chaque
+        # élément du dictionnaire ce qui offre la possibilité de faire quelque
+        # chose avec à chaque itération de la boucle 'for'
+        for tile_symbol in tile_dict:
+            # Récupère le chemin vers l'image stockée dans le dictionnaire
+            # 'tile_dict' et on le stocke dans la variable 'tile_path'
+            tile_path = tile_dict[tile_symbol]
+            # Ajoute à 'tiles' un caractère en clé et une image chargée en valeur
+            self.tiles[tile_symbol] = pygame.image.load(tile_path).convert_alpha()
 
-    # methode pour faire le rendu de la carte
-    def render(self) :
+    def render(self):
+        """ Affiche le rendu de la carte sur l'écran """
 
-        # Parcourir toutes les coordonnees x,y de la map
-        for x in range(largeur) :
-            for y in range(hauteur) :
-
-                # Recuperer le caractere associe a cette coordonnee x,y
+        # Parcourt toutes les coordonnées x,y de la map
+        for x in range(width):
+            for y in range(heigth):
+                # Récupère le caractère associé à cette coordonnée x,y
                 caractere = self.map[y][x]
-                # Recuper l'image associe a ce caractere
-                tileImage = self.tiles[caractere]
-                # Afficher l'image sur l'ecran
-                ecran.blit(tileImage, (x * tailleTile, y * tailleTile))
+                # Récupère l'image associé à ce caractère dans la liste 'tiles'
+                tile_image = self.tiles[caractere]
+                # Afficher l'image sur l'écran
+                ecran.blit(tile_image, (x * taille_tile, y * taille_tile))
 
-    # methode pour determiner si le prochain tile est traversable
-    # on donne la position du dit tile en argument (x, y)
-    def isWalkable(self, x, y) :
-        # on regarde, dans la liste 'map', si le prochain tile sera un '.'
-        if self.map[y][x] == "." :
-            # si oui on renvoit le resultat 'true'
+    def walkable(self, x, y):
+        """ Détermine si le prochain tile est traversable """
+
+        # on regarde dans la liste 'map' si le prochain tile est traversable
+        # on parcourt les lignes d'abord (y) puis le caractère dans la chaîne (x)
+        if self.map[y][x] == "." or self.map[y][x] == "□":
+            # si oui on renvoit le boléen 'True'
             return True
-        else :
-            return False
+        # Sinon implicitement la fonction renvoit 'None'
+
+    def pushable(self, x, y, dx, dy):
+        """ Détermine si le prochain tile est poussable """
+
+        # On récupère la valeur du tile que l'on veut pousser dans le tableau 'map'
+        next_tile = self.map[y + dy][x + dx]
+        # On récupère aussi la valeur du tile derrière l'élément à pousser
+        after_next_tile = self.map[y + dy*2][x + dx*2]
+
+        # Différents comportement à prévoir suivant les cas de figures
+        if next_tile == "■":
+            if after_next_tile == ".":
+                self.map[y + dy][x + dx] = "."
+                self.map[y + dy*2][x + dx*2] = "■"
+                return True
+            elif after_next_tile == "□":
+                self.map[y + dy][x + dx] = "."
+                self.map[y + dy*2][x + dx*2] = "▣"
+                return True
+        elif next_tile == "▣":
+            if after_next_tile == "." :
+                self.map[y + dy][x + dx] = "□"
+                self.map[y + dy*2][x + dx*2] = "■"
+                return True
+
+    def victory_condition(self) :
+        """ Check si les conditions de victoires sont remplies """
+
+        # Parcours le tableau de la map
+        for y in self.map :
+            for x in y :
+                # S'il y a encore un socle, le jeu continu
+                if x == "□" :
+                    return False
+        # Sinon charge la map avec les félicitations :
+        # Parce que si le return False est exécuté, le reste de la méthode
+        # ne sera pas exécuté
+        self.load_map("maps/youWin.asc")
+
 
 ###############################################################################
 
-#definition d'un dictionnaire contenant les chemins vers les sprites du perso
-spritesDict = {
-    "up"    : "assets/hero_up.png",
-    "down"  : "assets/hero_down.png",
-    "left"  : "assets/hero_left.png",
-    "right" : "assets/hero_right.png"
+# défini un dictionnaire contenant les chemins vers les sprites du perso
+sprites_dict = {
+    "up"   : "assets/hero_up.png",
+    "down" : "assets/hero_down.png",
+    "left" : "assets/hero_left.png",
+    "right": "assets/hero_right.png"
 }
 
 
 class Perso() :
+    """ Classe recueillant toutes les méthodes relatives à la gestion du perso """
 
-    # methode s'executant a l'initialisation de la classe Perso
-    # en donnant en parametre la position du perso
-    def __init__(self, initialPosition) :
+    def __init__(self, initial_position) :
+        """ Exécute les méthodes chargeant les images du perso en mémoire et
+            donnant une position initiale au personnage.
+        """
 
-        self.loadSprites()
-        # declare une variable de direction en lui indiquant une valeur par
-        # defaut
-        self.currentDirection = "down"
-        # XXX
-        (self.x, self.y) = initialPosition
+        self.load_sprites()
+        self.replace_hero(initial_position)
 
-    def loadSprites(self) :
+    def load_sprites(self) :
+        """ Charge les sprites en mémoire et les stocke dans un dictionnaire """
 
         self.sprites = { }
 
-        for sprite in spritesDict :
-
-            spritePath = spritesDict[sprite]
-            self.sprites[sprite] = pygame.image.load(spritePath)
+        # Parcourt le dictionnaire 'sprites_dict' et on nomme 'sprite' chaque
+        # élément du dictionnaire
+        for sprite in sprites_dict :
+            # Stocke le chemin vers l'image dans la variable 'sprite_path'
+            sprite_path = sprites_dict[sprite]
+            # Ajoute à 'sprites' une direction en clé et une image chargée en valeur
+            self.sprites[sprite] = pygame.image.load(sprite_path)
 
     def look(self, direction) :
+        """ Défini la direction dans laquelle le personnage regarde """
 
-        self.currentDirection = direction
+        self.current_direction = direction
 
     def move(self, dx, dy) :
+        """ Gère le déplacement du personnage """
 
-        nextTileIsWalkable = laMap.isWalkable(self.x + dx, self.y + dy)
+        # Détermine si le prochain tile est traversable/poussable en stockant
+        # la valeur renvoyée par les méthodes de la classe 'Map' dans des
+        # nouvelles variables
+        next_tile_is_walkable = laMap.walkable(self.x + dx, self.y + dy)
+        next_tile_is_pushable = laMap.pushable(self.x, self.y, dx, dy)
 
-        if (nextTileIsWalkable) :
+        # Si ces méthodes renvoit 'True' la position du personnage change
+        if (next_tile_is_walkable) or (next_tile_is_pushable) :
             self.x += dx
             self.y += dy
 
+    def replace_hero(self, initial_position):
+        """ Défini un sprite de direction par défaut et une position
+            donnée en argument.
+        """
+
+        # Déclare une variable de direction en lui indiquant une valeur par défaut
+        self.current_direction = "down"
+        # Défini la position initiale du personnage avec le tuple donné en argument
+        (self.x, self.y) = initial_position
+
+
     def render(self) :
+        """ Affiche le sprite du personnage sur l'écran """
 
-        currentSprite = self.sprites[self.currentDirection]
+        # Défini l'image à afficher en récupérant l'image chargée dans le
+        # dictionnaire suivant la direction du personnage
+        current_sprite = self.sprites[self.current_direction]
 
-        ecran.blit(currentSprite, (self.x * tailleTile, (self.y - 0.5) * tailleTile))
+        # Affiche le sprite du perso sur l'écran à la bonne position
+        ecran.blit(current_sprite, (self.x * taille_tile, (self.y - 0.5) * taille_tile))
 
 ###############################################################################
 
-def eventHandler() :
+def event_handler() :
+    """ Observe et réagit aux actions du joueurs """
 
-    # Check if user clicked the close button
     for event in pygame.event.get():
-
+        # Si le joueur utilise un événement 'QUIT'
         if (event.type == pygame.QUIT) :
             pygame.quit()
             sys.exit()
-
+        # Si le joueur enfonce une touche
         if (event.type == pygame.KEYDOWN) :
-            keysHandler(event.key)
+            # Exécute la fonction
+            keys_handler(event.key)
 
-def keysHandler(key) :
+def keys_handler(key) :
+    """ Gère les actions à effectuer suivant la touche enfoncée """
+
+    # la touche 'r' reset le niveau
+    if key == pygame.K_r :
+        laMap.load_map("maps/sokobanMap.asc")
+        lePerso.replace_hero((8,3))
 
     if key == pygame.K_LEFT :
         lePerso.look("left")
@@ -163,42 +240,45 @@ def keysHandler(key) :
 # Initialise PyGame
 pygame.init()
 
-# Defini le nombre de FPS (Frames Per Second)
+# Défini le nombre de FPS (Frames Per Second)
 fps = 30
-fpsClock = pygame.time.Clock()
+fps_clock = pygame.time.Clock()
 
-# Defini la taille d'un tile en px
-tailleTile = 64
-# Defini la taille de la map en tiles
-largeur = 20
-hauteur = 10
+# Défini la taille d'un tile en px
+taille_tile = 64
+# Défini la taille de la map en tiles
+width = 20
+heigth = 11
 
-# Setup the ecran
-titreFenetre = "My Game"
-ecran = pygame.display.set_mode((largeur * tailleTile, hauteur * tailleTile))
-pygame.display.set_caption(titreFenetre)
+# Setup l'écran, 'ecran' sera la variable sur laquelle blitter les images
+ecran = pygame.display.set_mode((width * taille_tile, heigth * taille_tile))
+# Donne un nom à la fenêtre
+pygame.display.set_caption("My Game")
 
-# Init/load the map
-laMap = Map("mapComplexe.asc")
+# Initialise et charge la map
+laMap = Map("maps/sokobanMap.asc")
 
-# Init/load hero
-lePerso = Perso((1,1))
+# Initialise et charge le personnage
+lePerso = Perso((8,3))
 
-# Main loop
+# Boucle principale et infinie
 while (True) :
 
-    # Effacer l'ecran
+    # Efface l'ecran
     ecran.fill((10, 10, 10))
 
-    # Gerer les events
-    eventHandler()
+    # Check si les conditions de victoire sont remplies
+    laMap.victory_condition()
 
-    # Afficher la map puis le hero
+    # Gèrer les événements
+    event_handler()
+
+    # Blitte la map puis le hero
     laMap.render()
     lePerso.render()
 
-    # Update ecran
+    # met à jour l'écran
     pygame.display.update()
-    fpsClock.tick(fps)
+    fps_clock.tick(fps)
 
 ###############################################################################
